@@ -1,0 +1,225 @@
+use clap::Parser;
+use colored::*;
+use hextorgb::*;
+
+#[derive(Parser)]
+#[command(name = "hextorgb")]
+#[command(about = "🎨 Convert hex color codes to RGB values")]
+#[command(version = "0.5.0")]
+#[command(author = "Luke Hannan")]
+struct Args {
+    /// Hex color code (e.g., #FF0000, 0xAABBCC, FFAABBCC)
+    hex_color: Option<String>,
+
+    /// Output format
+    #[arg(short, long, value_enum, default_value_t = OutputFormat::Standard)]
+    format: OutputFormat,
+
+    /// Run performance benchmark
+    #[arg(short, long)]
+    benchmark: bool,
+
+    /// Interactive mode
+    #[arg(short, long)]
+    interactive: bool,
+
+    /// Show color preview (requires true color terminal)
+    #[arg(short, long)]
+    preview: bool,
+}
+
+#[derive(Clone, clap::ValueEnum)]
+enum OutputFormat {
+    Standard,
+    Css,
+    Json,
+    Hex,
+    Compact,
+}
+
+fn convert_with_format(
+    hex: &str,
+    format: &OutputFormat,
+    show_preview: bool,
+) -> Result<String, String> {
+    let (rgb, alpha) = parse_hex(hex).map_err(|e| e.to_string())?;
+
+    let converted = RGB {
+        r: rgb[0],
+        g: rgb[1],
+        b: rgb[2],
+        a: match alpha {
+            Some(a) => a as f64 / 255.0,
+            None => 1.0,
+        },
+    };
+
+    let mut output = match format {
+        OutputFormat::Standard => {
+            if alpha.is_some() {
+                format!(
+                    "RGBA({}, {}, {}, {:.2})",
+                    converted.r, converted.g, converted.b, converted.a
+                )
+            } else {
+                format!("RGB({}, {}, {})", converted.r, converted.g, converted.b)
+            }
+        }
+        OutputFormat::Css => {
+            if alpha.is_some() {
+                format!(
+                    "rgba({}, {}, {}, {:.2})",
+                    converted.r, converted.g, converted.b, converted.a
+                )
+            } else {
+                format!("rgb({}, {}, {})", converted.r, converted.g, converted.b)
+            }
+        }
+        OutputFormat::Json => {
+            if alpha.is_some() {
+                format!(
+                    r#"{{"r": {}, "g": {}, "b": {}, "a": {:.2}}}"#,
+                    converted.r, converted.g, converted.b, converted.a
+                )
+            } else {
+                format!(
+                    r#"{{"r": {}, "g": {}, "b": {}}}"#,
+                    converted.r, converted.g, converted.b
+                )
+            }
+        }
+        OutputFormat::Hex => {
+            if alpha.is_some() {
+                format!(
+                    "#{:02X}{:02X}{:02X}{:02X}",
+                    converted.r,
+                    converted.g,
+                    converted.b,
+                    (converted.a * 255.0) as u8
+                )
+            } else {
+                format!("#{:02X}{:02X}{:02X}", converted.r, converted.g, converted.b)
+            }
+        }
+        OutputFormat::Compact => {
+            if alpha.is_some() {
+                format!(
+                    "{},{},{},{:.2}",
+                    converted.r, converted.g, converted.b, converted.a
+                )
+            } else {
+                format!("{},{},{}", converted.r, converted.g, converted.b)
+            }
+        }
+    };
+
+    if show_preview {
+        let preview = format!("   ").on_truecolor(converted.r, converted.g, converted.b);
+        output = format!("{} {}", preview, output);
+    }
+
+    Ok(output)
+}
+
+fn run_interactive_mode() {
+    println!(
+        "{}",
+        "🎨 Hex to RGB Converter - Interactive Mode"
+            .bright_cyan()
+            .bold()
+    );
+    println!("{}", "Enter hex colors (type 'quit' to exit)".dimmed());
+
+    loop {
+        print!("{} ", "hex>".bright_green().bold());
+        std::io::Write::flush(&mut std::io::stdout()).unwrap();
+
+        let mut input = String::new();
+        if std::io::stdin().read_line(&mut input).is_err() {
+            break;
+        }
+
+        let input = input.trim();
+        if input.is_empty() {
+            continue;
+        }
+        if input == "quit" || input == "exit" {
+            println!("{}", "Goodbye! 👋".bright_cyan());
+            break;
+        }
+
+        match convert_with_format(input, &OutputFormat::Standard, true) {
+            Ok(result) => println!("  {}", result),
+            Err(e) => println!("  {} {}", "Error:".red().bold(), e),
+        }
+    }
+}
+
+fn run_benchmark() {
+    println!(
+        "{}",
+        "🚀 Running Performance Benchmark...".bright_yellow().bold()
+    );
+
+    let test_colors = vec!["#FF0000", "0x00FF00", "0000FF", "#FFAABBCC"];
+    let iterations = 1_000_000;
+
+    let start = std::time::Instant::now();
+    for _ in 0..iterations {
+        for color in &test_colors {
+            let _ = hextorgb(color);
+        }
+    }
+    let duration = start.elapsed();
+
+    let total_conversions = iterations * test_colors.len();
+    let avg_per_conversion = duration / total_conversions as u32;
+
+    println!(
+        "  {} conversions in {:?}",
+        total_conversions.to_string().bright_white().bold(),
+        duration
+    );
+    println!(
+        "  {} per conversion",
+        format!("{:?}", avg_per_conversion).bright_green()
+    );
+    println!(
+        "  {} conversions/sec",
+        ((total_conversions as f64 / duration.as_secs_f64()) as u64)
+            .to_string()
+            .bright_cyan()
+            .bold()
+    );
+}
+
+
+fn main() {
+    let args = Args::parse();
+
+    if args.benchmark {
+        run_benchmark();
+        return;
+    }
+
+    if args.interactive {
+        run_interactive_mode();
+        return;
+    }
+
+    if let Some(hex_color) = args.hex_color {
+        match convert_with_format(&hex_color, &args.format, args.preview) {
+            Ok(result) => println!("{}", result),
+            Err(e) => {
+                eprintln!("{} {}", "Error:".red().bold(), e);
+                std::process::exit(1);
+            }
+        }
+    } else {
+        eprintln!(
+            "{}",
+            "Error: Please provide a hex color or use --interactive mode".red()
+        );
+        std::process::exit(1);
+    }
+}
