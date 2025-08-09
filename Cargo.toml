@@ -1,6 +1,6 @@
 [package]
 name = "hextorgb"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2021"
 
 [lib]
@@ -10,14 +10,23 @@ path = "src/lib.rs"
 [[bin]]
 name = "hextorgb"
 path = "src/main.rs"
+required-features = ["cli"]
 
 [dependencies]
-clap = { version = "4.5.43", features = ["derive"] }
-colored = "3.0.0"
+# Library-only dependencies (always included)
+# None needed for core hex parsing
+
+# Binary-only dependencies (optional)
+clap = { version = "4.5.43", features = ["derive"], optional = true }
+colored = { version = "3.0.0", optional = true }
+
+[features]
+default = []
+cli = ["dep:clap", "dep:colored"]  # Enable CLI dependencies
 
 [profile.release]
 lto = true
-codegen-units = 1          # Better optimization, slower compile
-panic = "abort"            # Smaller binary size
-strip = true              # Remove debug symbols
-opt-level = 3   
+codegen-units = 1
+panic = "abort"
+strip = true
+opt-level = 3

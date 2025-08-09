@@ -18,10 +18,10 @@ fn test_full_conversion_workflow() {
 fn test_edge_cases() {
     // Test alpha channel
     assert_eq!(hextorgb("#FF0000AA"), "RGB(255, 0, 0, 0.67)");
-    
+
     // Test lowercase
     assert_eq!(hextorgb("#ff0000"), "RGB(255, 0, 0)");
-    
+
     // Test error cases
     assert_eq!(hextorgb("#ZZZZZZ"), "Invalid hex");
     assert_eq!(hextorgb("#FFF"), "Invalid hex length");

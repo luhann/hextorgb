@@ -1,5 +1,6 @@
 use clap::Parser;
 use colored::*;
+
 use hextorgb::*;
 
 #[derive(Parser)]
@@ -26,99 +27,6 @@ struct Args {
     /// Show color preview (requires true color terminal)
     #[arg(short, long)]
     preview: bool,
-}
-
-#[derive(Clone, clap::ValueEnum)]
-enum OutputFormat {
-    Standard,
-    Css,
-    Json,
-    Hex,
-    Compact,
-}
-
-fn convert_with_format(
-    hex: &str,
-    format: &OutputFormat,
-    show_preview: bool,
-) -> Result<String, String> {
-    let (rgb, alpha) = parse_hex(hex).map_err(|e| e.to_string())?;
-
-    let converted = RGB {
-        r: rgb[0],
-        g: rgb[1],
-        b: rgb[2],
-        a: match alpha {
-            Some(a) => a as f64 / 255.0,
-            None => 1.0,
-        },
-    };
-
-    let mut output = match format {
-        OutputFormat::Standard => {
-            if alpha.is_some() {
-                format!(
-                    "RGBA({}, {}, {}, {:.2})",
-                    converted.r, converted.g, converted.b, converted.a
-                )
-            } else {
-                format!("RGB({}, {}, {})", converted.r, converted.g, converted.b)
-            }
-        }
-        OutputFormat::Css => {
-            if alpha.is_some() {
-                format!(
-                    "rgba({}, {}, {}, {:.2})",
-                    converted.r, converted.g, converted.b, converted.a
-                )
-            } else {
-                format!("rgb({}, {}, {})", converted.r, converted.g, converted.b)
-            }
-        }
-        OutputFormat::Json => {
-            if alpha.is_some() {
-                format!(
-                    r#"{{"r": {}, "g": {}, "b": {}, "a": {:.2}}}"#,
-                    converted.r, converted.g, converted.b, converted.a
-                )
-            } else {
-                format!(
-                    r#"{{"r": {}, "g": {}, "b": {}}}"#,
-                    converted.r, converted.g, converted.b
-                )
-            }
-        }
-        OutputFormat::Hex => {
-            if alpha.is_some() {
-                format!(
-                    "#{:02X}{:02X}{:02X}{:02X}",
-                    converted.r,
-                    converted.g,
-                    converted.b,
-                    (converted.a * 255.0) as u8
-                )
-            } else {
-                format!("#{:02X}{:02X}{:02X}", converted.r, converted.g, converted.b)
-            }
-        }
-        OutputFormat::Compact => {
-            if alpha.is_some() {
-                format!(
-                    "{},{},{},{:.2}",
-                    converted.r, converted.g, converted.b, converted.a
-                )
-            } else {
-                format!("{},{},{}", converted.r, converted.g, converted.b)
-            }
-        }
-    };
-
-    if show_preview {
-        let preview = format!("   ").on_truecolor(converted.r, converted.g, converted.b);
-        output = format!("{} {}", preview, output);
-    }
-
-    Ok(output)
 }
 
 fn run_interactive_mode() {
@@ -192,7 +100,6 @@ fn run_benchmark() {
             .bold()
     );
 }
-
 
 fn main() {
     let args = Args::parse();

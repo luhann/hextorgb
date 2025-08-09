@@ -42,8 +42,134 @@ pub fn parse_hex(hex: &str) -> Result<([u8; 3], Option<u8>), &'static str> {
     }
 }
 
+// Core conversion function - zero dependencies
+pub fn convert_hex_to_format(
+    hex: &str,
+    format: &str,
+) -> Result<String, String> {
+    let (rgb, alpha) = parse_hex(hex).map_err(|e| e.to_string())?;
+
+    let converted = RGB {
+        r: rgb[0],
+        g: rgb[1],
+        b: rgb[2],
+        a: match alpha {
+            Some(a) => a as f64 / 255.0,
+            None => 1.0,
+        },
+    };
+
+    let output = match format {
+        "standard" => {
+            if alpha.is_some() {
+                format!(
+                    "RGBA({}, {}, {}, {:.2})",
+                    converted.r, converted.g, converted.b, converted.a
+                )
+            } else {
+                format!("RGB({}, {}, {})", converted.r, converted.g, converted.b)
+            }
+        }
+        "css" => {
+            if alpha.is_some() {
+                format!(
+                    "rgba({}, {}, {}, {:.2})",
+                    converted.r, converted.g, converted.b, converted.a
+                )
+            } else {
+                format!("rgb({}, {}, {})", converted.r, converted.g, converted.b)
+            }
+        }
+        "json" => {
+            if alpha.is_some() {
+                format!(
+                    r#"{{"r": {}, "g": {}, "b": {}, "a": {:.2}}}"#,
+                    converted.r, converted.g, converted.b, converted.a
+                )
+            } else {
+                format!(
+                    r#"{{"r": {}, "g": {}, "b": {}}}"#,
+                    converted.r, converted.g, converted.b
+                )
+            }
+        }
+        "hex" => {
+            if alpha.is_some() {
+                format!(
+                    "#{:02X}{:02X}{:02X}{:02X}",
+                    converted.r,
+                    converted.g,
+                    converted.b,
+                    (converted.a * 255.0) as u8
+                )
+            } else {
+                format!("#{:02X}{:02X}{:02X}", converted.r, converted.g, converted.b)
+            }
+        }
+        "compact" => {
+            if alpha.is_some() {
+                format!(
+                    "{},{},{},{:.2}",
+                    converted.r, converted.g, converted.b, converted.a
+                )
+            } else {
+                format!("{},{},{}", converted.r, converted.g, converted.b)
+            }
+        }
+        _ => return Err(format!("Unknown format: {}", format)),
+    };
+
+    Ok(output)
+}
+
+// CLI-specific wrapper with enum and preview support
+#[cfg(feature = "cli")]
+pub use clap::ValueEnum;
+
+#[cfg(feature = "cli")]
+#[derive(Clone, clap::ValueEnum)]
+pub enum OutputFormat {
+    Standard,
+    Css,
+    Json,
+    Hex,
+    Compact,
+}
+
+#[cfg(feature = "cli")]
+impl OutputFormat {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            OutputFormat::Standard => "standard",
+            OutputFormat::Css => "css",
+            OutputFormat::Json => "json",
+            OutputFormat::Hex => "hex",
+            OutputFormat::Compact => "compact",
+        }
+    }
+}
+
+#[cfg(feature = "cli")]
+pub fn convert_with_format(
+    hex: &str,
+    format: &OutputFormat,
+    show_preview: bool,
+) -> Result<String, String> {
+    use colored::*;
+    
+    let mut output = convert_hex_to_format(hex, format.as_str())?;
+    
+    if show_preview {
+        let (rgb, _) = parse_hex(hex).map_err(|e| e.to_string())?;
+        let preview = format!("   ").on_truecolor(rgb[0], rgb[1], rgb[2]);
+        output = format!("{} {}", preview, output);
+    }
+    
+    Ok(output)
+}
+
 /// Converts a hex color string to RGB format
-/// 
+///
 /// # Examples
 /// ```
 /// use hextorgb::hextorgb;

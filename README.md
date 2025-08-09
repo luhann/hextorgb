@@ -22,12 +22,19 @@ A fast and flexible command-line tool and Rust library for converting hex color 
 ```bash
 git clone https://github.com/luhann/hextorgb.git
 cd hextorgb
-cargo install --path .
+cargo install --path . --features cli
 ```
 
 ### From GitHub (Latest)
 ```bash
-cargo install --git https://github.com/luhann/hextorgb
+cargo install --git https://github.com/luhann/hextorgb --features cli
+```
+
+### Library Only
+```toml
+[dependencies]
+hextorgb = { git = "https://github.com/luhann/hextorgb" }
+# No CLI dependencies included - zero external deps!
 ```
 
 ## 📖 Usage
@@ -103,6 +110,7 @@ Add to your `Cargo.toml`:
 ```toml
 [dependencies]
 hextorgb = { git = "https://github.com/luhann/hextorgb" }
+# Zero external dependencies for library usage!
 ```
 
 ### Basic usage
@@ -167,7 +175,15 @@ Typical performance: **~60ns per conversion** on modern hardware.
 ```bash
 git clone https://github.com/luhann/hextorgb.git
 cd hextorgb
+
+# Build library only
 cargo build --release
+
+# Build CLI tool
+cargo build --release --features cli
+
+# Run CLI tool
+cargo run --features cli -- "#FF0000"
 ```
 
 ### Testing
@@ -180,6 +196,9 @@ cargo test -- --nocapture
 
 # Run integration tests
 cargo test --test conversions
+
+# Test CLI features
+cargo test --features cli
 ```
 
 ## 🤝 Contributing
