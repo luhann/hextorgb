@@ -16,13 +16,12 @@ impl RGB {
 }
 
 pub fn parse_hex(hex: &str) -> Result<([u8; 3], Option<u8>), &'static str> {
-    let clean = if hex.starts_with("0x") || hex.starts_with("0X") {
-        &hex[2..]
-    } else if hex.starts_with('#') {
-        &hex[1..]
-    } else {
-        hex
-    };
+
+    let clean = hex
+        .strip_prefix("0x")
+        .or_else(|| hex.strip_prefix("0X"))
+        .or_else(|| hex.strip_prefix("#"))
+        .unwrap_or(hex);
 
     match clean.len() {
         6 => {
@@ -176,7 +175,7 @@ pub fn convert_with_format(
 /// assert_eq!(hextorgb("#FF0000"), "RGB(255, 0, 0)");
 /// ```
 pub fn hextorgb(hex: &str) -> String {
-    let parsed = match parse_hex(&hex) {
+    match parse_hex(hex) {
         Ok((rgb, alpha)) => {
             let converted = RGB {
                 r: rgb[0],
@@ -195,7 +194,5 @@ pub fn hextorgb(hex: &str) -> String {
             }
         }
         Err(e) => e.to_string(),
-    };
-
-    parsed
+    }
 }

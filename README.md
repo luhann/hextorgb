@@ -93,9 +93,9 @@ hextorgb --benchmark
 ```
 ```
 🚀 Running Performance Benchmark...
-  4000000 conversions in 267.599371ms
-  66ns per conversion
-  14947718 conversions/sec
+  4000000 conversions in 263.808756ms
+  65ns per conversion
+  15162499 conversions/sec
 ```
 
 ### Help
