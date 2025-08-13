@@ -2,7 +2,7 @@
 
 A fast and flexible command-line tool and Rust library for converting hex color codes to RGB values.
 
-[![Rust](https://github.com/luhann/hextorgb/workflows/CI/badge.svg)](https://github.com/luhann/hextorgb/actions)
+[![Rust](https://github.com/luhann/hextorgb/actions/workflows/rust.yml/badge.svg)](https://github.com/luhann/hextorgb/actions/workflows/rust.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## ✨ Features
