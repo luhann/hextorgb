@@ -114,19 +114,22 @@ fn main() {
         return;
     }
 
-    if let Some(hex_color) = args.hex_color {
-        match convert_with_format(&hex_color, &args.format, args.preview) {
-            Ok(result) => println!("{}", result),
-            Err(e) => {
-                eprintln!("{} {}", "Error:".red().bold(), e);
-                std::process::exit(1);
-            }
+    let hex_color: String = match args.hex_color {
+        Some(color) => color,
+        None => {
+            eprintln!(
+                "{}",
+                "Error: Please provide a hex color or use --interactive mode".red()
+            );
+            std::process::exit(1);
         }
-    } else {
-        eprintln!(
-            "{}",
-            "Error: Please provide a hex color or use --interactive mode".red()
-        );
-        std::process::exit(1);
+    };
+
+    match convert_with_format(hex_color.trim(), &args.format, args.preview) {
+        Ok(result) => println!("{}", result),
+        Err(e) => {
+            eprintln!("{} {}", "Error:".red().bold(), e);
+            std::process::exit(1);
+        }
     }
 }
