@@ -16,7 +16,6 @@ impl RGB {
 }
 
 pub fn parse_hex(hex: &str) -> Result<([u8; 3], Option<u8>), &'static str> {
-
     let clean = hex
         .strip_prefix("0x")
         .or_else(|| hex.strip_prefix("0X"))
@@ -42,10 +41,7 @@ pub fn parse_hex(hex: &str) -> Result<([u8; 3], Option<u8>), &'static str> {
 }
 
 // Core conversion function - zero dependencies
-pub fn convert_hex_to_format(
-    hex: &str,
-    format: &str,
-) -> Result<String, String> {
+pub fn convert_hex_to_format(hex: &str, format: &str) -> Result<String, String> {
     let (rgb, alpha) = parse_hex(hex).map_err(|e| e.to_string())?;
 
     let converted = RGB {
@@ -155,15 +151,15 @@ pub fn convert_with_format(
     show_preview: bool,
 ) -> Result<String, String> {
     use colored::*;
-    
+
     let mut output = convert_hex_to_format(hex, format.as_str())?;
-    
+
     if show_preview {
         let (rgb, _) = parse_hex(hex).map_err(|e| e.to_string())?;
-        let preview = format!("   ").on_truecolor(rgb[0], rgb[1], rgb[2]);
+        let preview = "   ".on_truecolor(rgb[0], rgb[1], rgb[2]);
         output = format!("{} {}", preview, output);
     }
-    
+
     Ok(output)
 }
 
