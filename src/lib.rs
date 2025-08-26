@@ -1,16 +1,17 @@
-pub struct RGB {
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
-    pub a: f64,
+pub enum Color {
+    Rgb { r: u8, g: u8, b: u8 },
+    Rgba { r: u8, g: u8, b: u8, a: f64 },
 }
 
-impl RGB {
-    fn to_string(&self, format_type: &str) -> String {
-        if format_type == "alpha" {
-            format!("RGB({}, {}, {}, {:.2})", self.r, self.g, self.b, self.a)
-        } else {
-            format!("RGB({}, {}, {})", self.r, self.g, self.b)
+impl Color {
+    pub fn to_string(&self) -> String {
+        match self {
+            Color::Rgb { r, g, b } => {
+                format!("RGB({}, {}, {})", r, g, b)
+            }
+            Color::Rgba { r, g, b, a } => {
+                format!("RGBA({}, {}, {}, {:.2})", r, g, b, a)
+            }
         }
     }
 }
@@ -44,73 +45,42 @@ pub fn parse_hex(hex: &str) -> Result<([u8; 3], Option<u8>), &'static str> {
 pub fn convert_hex_to_format(hex: &str, format: &str) -> Result<String, String> {
     let (rgb, alpha) = parse_hex(hex).map_err(|e| e.to_string())?;
 
-    let converted = RGB {
-        r: rgb[0],
-        g: rgb[1],
-        b: rgb[2],
-        a: match alpha {
-            Some(a) => a as f64 / 255.0,
-            None => 1.0,
+    let converted = match alpha {
+        Some(a) => Color::Rgba {
+            r: (rgb[0]),
+            g: (rgb[1]),
+            b: (rgb[2]),
+            a: (a as f64 / 255.0),
+        },
+        None => Color::Rgb {
+            r: (rgb[0]),
+            g: (rgb[1]),
+            b: (rgb[2]),
         },
     };
 
     let output = match format {
-        "standard" => {
-            if alpha.is_some() {
-                format!(
-                    "RGBA({}, {}, {}, {:.2})",
-                    converted.r, converted.g, converted.b, converted.a
-                )
-            } else {
-                format!("RGB({}, {}, {})", converted.r, converted.g, converted.b)
+        "standard" => converted.to_string(),
+        "css" => match &converted {
+            Color::Rgba { r, g, b, a } => format!("rgba({}, {}, {}, {:.2})", r, g, b, a),
+            Color::Rgb { r, g, b } => format!("rgb({}, {}, {})", r, g, b),
+        },
+        "json" => match &converted {
+            Color::Rgba { r, g, b, a } => {
+                format!(r#"{{"r": {}, "g": {}, "b": {}, "a": {:.2}}}"#, r, g, b, a)
             }
-        }
-        "css" => {
-            if alpha.is_some() {
-                format!(
-                    "rgba({}, {}, {}, {:.2})",
-                    converted.r, converted.g, converted.b, converted.a
-                )
-            } else {
-                format!("rgb({}, {}, {})", converted.r, converted.g, converted.b)
+            Color::Rgb { r, g, b } => format!(r#"{{"r": {}, "g": {}, "b": {}}}"#, r, g, b),
+        },
+        "hex" => match &converted {
+            Color::Rgba { r, g, b, a } => {
+                format!("#{:02X}{:02X}{:02X}{:02X}", r, g, b, (*a * 255.0) as u8)
             }
-        }
-        "json" => {
-            if alpha.is_some() {
-                format!(
-                    r#"{{"r": {}, "g": {}, "b": {}, "a": {:.2}}}"#,
-                    converted.r, converted.g, converted.b, converted.a
-                )
-            } else {
-                format!(
-                    r#"{{"r": {}, "g": {}, "b": {}}}"#,
-                    converted.r, converted.g, converted.b
-                )
-            }
-        }
-        "hex" => {
-            if alpha.is_some() {
-                format!(
-                    "#{:02X}{:02X}{:02X}{:02X}",
-                    converted.r,
-                    converted.g,
-                    converted.b,
-                    (converted.a * 255.0) as u8
-                )
-            } else {
-                format!("#{:02X}{:02X}{:02X}", converted.r, converted.g, converted.b)
-            }
-        }
-        "compact" => {
-            if alpha.is_some() {
-                format!(
-                    "{},{},{},{:.2}",
-                    converted.r, converted.g, converted.b, converted.a
-                )
-            } else {
-                format!("{},{},{}", converted.r, converted.g, converted.b)
-            }
-        }
+            Color::Rgb { r, g, b } => format!("#{:02X}{:02X}{:02X}", r, g, b),
+        },
+        "compact" => match &converted {
+            Color::Rgba { r, g, b, a } => format!("{},{},{},{:.2}", r, g, b, a),
+            Color::Rgb { r, g, b } => format!("{},{},{}", r, g, b),
+        },
         _ => return Err(format!("Unknown format: {}", format)),
     };
 
@@ -173,21 +143,20 @@ pub fn convert_with_format(
 pub fn hextorgb(hex: &str) -> String {
     match parse_hex(hex) {
         Ok((rgb, alpha)) => {
-            let converted = RGB {
-                r: rgb[0],
-                g: rgb[1],
-                b: rgb[2],
-                a: match alpha {
-                    Some(a) => a as f64 / 255.0,
-                    None => -1.0,
+            let color = match alpha {
+                Some(a) => Color::Rgba {
+                    r: rgb[0],
+                    g: rgb[1],
+                    b: rgb[2],
+                    a: a as f64 / 255.0,
+                },
+                None => Color::Rgb {
+                    r: rgb[0],
+                    g: rgb[1],
+                    b: rgb[2],
                 },
             };
-
-            if converted.a < 0.0 {
-                converted.to_string("noalpha")
-            } else {
-                converted.to_string("alpha")
-            }
+            color.to_string()
         }
         Err(e) => e.to_string(),
     }

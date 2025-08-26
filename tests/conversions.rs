@@ -29,10 +29,10 @@ fn test_hextorgb_case_insensitive() {
 
 #[test]
 fn test_hextorgb_alpha_channel() {
-    assert_eq!(hextorgb("#FF0000AA"), "RGB(255, 0, 0, 0.67)");
-    assert_eq!(hextorgb("#FF000080"), "RGB(255, 0, 0, 0.50)");
-    assert_eq!(hextorgb("#0000FF00"), "RGB(0, 0, 255, 0.00)");
-    assert_eq!(hextorgb("#00FF00FF"), "RGB(0, 255, 0, 1.00)");
+    assert_eq!(hextorgb("#FF0000AA"), "RGBA(255, 0, 0, 0.67)");
+    assert_eq!(hextorgb("#FF000080"), "RGBA(255, 0, 0, 0.50)");
+    assert_eq!(hextorgb("#0000FF00"), "RGBA(0, 0, 255, 0.00)");
+    assert_eq!(hextorgb("#00FF00FF"), "RGBA(0, 255, 0, 1.00)");
 }
 
 #[test]
