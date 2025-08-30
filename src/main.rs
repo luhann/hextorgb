@@ -1,7 +1,7 @@
 use clap::Parser;
 use colored::*;
 
-use hextorgb::*;
+use hextorgb;
 
 #[derive(Parser)]
 #[command(name = "hextorgb")]
@@ -13,8 +13,8 @@ struct Args {
     hex_color: Option<String>,
 
     /// Output format
-    #[arg(short, long, value_enum, default_value_t = OutputFormat::Standard)]
-    format: OutputFormat,
+    #[arg(short, long, value_enum, default_value_t = hextorgb::OutputFormat::Standard)]
+    format: hextorgb::OutputFormat,
 
     /// Run performance benchmark
     #[arg(short, long)]
@@ -56,7 +56,7 @@ fn run_interactive_mode() {
             break;
         }
 
-        match convert_with_format(input, &OutputFormat::Standard, true) {
+        match hextorgb::convert_with_format(input, &hextorgb::OutputFormat::Standard, true) {
             Ok(result) => println!("  {}", result),
             Err(e) => println!("  {} {}", "Error:".red().bold(), e),
         }
@@ -75,7 +75,7 @@ fn run_benchmark() {
     let start = std::time::Instant::now();
     for _ in 0..iterations {
         for color in &test_colors {
-            let _ = hextorgb(color);
+            let _ = hextorgb::hextorgb(color);
         }
     }
     let duration = start.elapsed();
@@ -125,7 +125,7 @@ fn main() {
         }
     };
 
-    match convert_with_format(hex_color.trim(), &args.format, args.preview) {
+    match hextorgb::convert_with_format(hex_color.trim(), &args.format, args.preview) {
         Ok(result) => println!("{}", result),
         Err(e) => {
             eprintln!("{} {}", "Error:".red().bold(), e);
