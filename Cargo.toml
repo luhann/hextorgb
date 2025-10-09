@@ -13,16 +13,13 @@ path = "src/main.rs"
 required-features = ["cli"]
 
 [dependencies]
-# Library-only dependencies (always included)
-# None needed for core hex parsing
-
-# Binary-only dependencies (optional)
+# Binary-only dependencies
 clap = { version = "4.5.43", features = ["derive"], optional = true }
 colored = { version = "3.0.0", optional = true }
 
 [features]
 default = []
-cli = ["dep:clap", "dep:colored"]  # Enable CLI dependencies
+cli = ["dep:clap", "dep:colored"]
 
 [profile.release]
 lto = true
