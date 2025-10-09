@@ -1,8 +1,6 @@
 use clap::Parser;
 use colored::*;
 
-use hextorgb;
-
 #[derive(Parser)]
 #[command(name = "hextorgb")]
 #[command(about = "🎨 Convert hex color codes to RGB values")]

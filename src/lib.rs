@@ -1,16 +1,18 @@
+use std::fmt;
+
 pub enum Color {
     Rgb { r: u8, g: u8, b: u8 },
     Rgba { r: u8, g: u8, b: u8, a: f64 },
 }
 
-impl Color {
-    pub fn to_string(&self) -> String {
+impl fmt::Display for Color {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Color::Rgb { r, g, b } => {
-                format!("RGB({}, {}, {})", r, g, b)
+                write!(f, "RGB({}, {}, {})", r, g, b)
             }
             Color::Rgba { r, g, b, a } => {
-                format!("RGBA({}, {}, {}, {:.2})", r, g, b, a)
+                write!(f, "RGBA({}, {}, {}, {:.2})", r, g, b, a)
             }
         }
     }
